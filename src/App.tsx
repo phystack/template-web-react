@@ -7,7 +7,7 @@ import {
   type WebAppSessionError,
 } from "@phystack/hub-client";
 import logo from "./phystack-logo.svg";
-import { loadBoot, sessionBaseUrl } from "./boot";
+import { loadBoot } from "./boot";
 import type { Settings } from "./schema";
 
 interface AppState {
@@ -47,7 +47,7 @@ function App() {
         const client = await connectPhyClient({
           webApp: {
             urlId: boot.urlId,
-            sessionBaseUrl: sessionBaseUrl(boot),
+            sessionBaseUrl: boot.sessionBaseUrl,
             phyhubUrl: boot.phyhubUrl,
             code,
           },
