@@ -68,16 +68,3 @@ bun run pub                             # build + submit + publish
 the bundle to every enabled web endpoint of each installation on the published
 build.
 
-## Relation to template-web-react
-
-This directory is the in-monorepo copy of
-[template-web-react](https://github.com/phystack/template-web-react) (the
-`v2` branch `phy app init --type web` clones). Two intentional differences:
-
-- `"@phystack/hub-client"` is `workspace:*` here (builds against the local
-  package) vs the published range in the template repo.
-- The template repo carries its own README/CLAUDE.md written for scaffolded
-  users.
-
-Everything else is lockstep — if you change shared parts here, push the same
-change to the template repo (and vice versa).

@@ -25,7 +25,7 @@ twin session minted from a one-time claim code). Scaffolded by
 - Claim codes are one-time. A page reload consumes nothing by itself, but a
   new session needs a freshly minted code — the refresh-grant rotation only
   survives inside a running page.
-- The hub connection is a per-window singleton; `connectPhyClient({ webApp })`
+- The hub connection is a per-window singleton; `connectPhyClient()`
   is called once from `src/App.tsx` and signals reuse the same socket. Do
   not open a second connection.
 - Settings come from the endpoint's Web twin desired properties, delivered
