@@ -1,0 +1,48 @@
+{
+  "name": "phystack-template-web-react",
+  "version": "0.1.0",
+  "description": "PhyStack Web App Template (React)",
+  "private": true,
+  "application-type": "web",
+  "homepage": "./",
+  "type": "module",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "scripts": {
+    "dev": "bun run schema && vite",
+    "start": "bun run dev",
+    "schema": "mkdir -p build && bun scripts/build-schema.js && bun run analytics-schema",
+    "analytics-schema": "bun scripts/build-analytics-schema.js",
+    "build": "tsc -b && vite build && bun run schema && bun scripts/post-build.js",
+    "pub": "bun run build && phy app build create $npm_package_name --dir . --publish",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "dependencies": {
+    "@ombori/grid-reports": "^3.37.4",
+    "@phystack/hub-client": "^6.9.0",
+    "events": "^3.3.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "styled-components": "^5.3.5"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.36.0",
+    "@phystack/ts-schema": "^4.4.74",
+    "@types/node": "^24.6.0",
+    "@types/react": "^18.0.15",
+    "@types/react-dom": "^18.0.6",
+    "@types/styled-components": "^5.1.25",
+    "@vitejs/plugin-react": "^5.0.4",
+    "eslint": "^9.36.0",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-react-refresh": "^0.4.22",
+    "globals": "^16.4.0",
+    "prettier": "^3.6.2",
+    "typescript": "~5.9.3",
+    "typescript-eslint": "^8.45.0",
+    "vite": "^7.1.7"
+  }
+}
