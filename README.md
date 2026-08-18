@@ -68,3 +68,10 @@ bun run pub                             # build + submit + publish
 the bundle to every enabled web endpoint of each installation on the published
 build.
 
+## Screen sibling
+
+[template-screen-react](https://github.com/phystack/template-screen-react)
+is the SCREEN-app variant of this template: same schema pipeline, build
+output layout, and publish flow; only the connection target differs (device
+twin via `#instanceId` instead of a web session via `#code`). If you change
+shared parts of one template, change both.
