@@ -11,7 +11,7 @@ twin session minted from a one-time claim code). Scaffolded by
 | Command | What it runs |
 |---|---|
 | `bun install` | Install dependencies |
-| `bun run dev` | Schemas + `vite` (boot fields from `VITE_*` env, claim code from `#code=…`) |
+| `bun run dev` | Schemas + `vite` (boot from `public/boot.json`, claim code from `#code=…`) |
 | `bun run build` | `tsc -b` + `vite build` + schemas + `scripts/post-build.js` |
 | `bun run schema` | `scripts/build-schema.js` + `scripts/build-analytics-schema.js` → `build/` |
 | `bun run pub` | `bun run build && phy app build create $npm_package_name --dir . --publish` |
@@ -19,10 +19,9 @@ twin session minted from a one-time claim code). Scaffolded by
 
 ## Dev loop
 
-- No simulator support yet for web sessions. Point the app at a real
-  environment via env vars (`VITE_WEB_URL_ID`, `VITE_WEB_REGION`,
-  `VITE_PHYHUB_URL`, `VITE_CORE_API_URL` — see `src/boot.ts`), then open
-  `http://localhost:3000/#code=<claim-code>`.
+- No simulator support yet for web sessions. Create a git-ignored
+  `public/boot.json` (`{ urlId, phyhubUrl, sessionBaseUrl }`) pointing at a
+  real environment, then open `http://localhost:3000/#code=<claim-code>`.
 - Claim codes are one-time. A page reload consumes nothing by itself, but a
   new session needs a freshly minted code — the refresh-grant rotation only
   survives inside a running page.
@@ -56,8 +55,7 @@ use the Rust `phy` CLI only.
 
 | Path | Purpose |
 |---|---|
-| `src/App.tsx` | UI + web session connection, settings, session-terminated handling |
-| `src/boot.ts` | `boot.json` fetch (deployed) with `VITE_*` env fallback (dev) |
+| `src/App.tsx` | UI + zero-config `connectPhyClient()`, settings, session-terminated handling |
 | `src/schema.ts` | Installation-settings schema source |
 | `src/analytics-schema.ts` | Analytics events this app emits |
 | `scripts/` | Schema build, post-build fixup |

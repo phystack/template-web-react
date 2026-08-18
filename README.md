@@ -1,113 +1,83 @@
-# template-web-react
+# PhyStack Web App Template (React)
 
-Starter template for PhyStack **WEB** apps — Vite + React front-end bundles
-delivered to a visitor's phone browser through a web endpoint, connected to
-the platform through `@phystack/hub-client`. Scaffolded by the PhyStack CLI
-(`phy app init --type web`) or usable directly.
+Starter for a **web app** — a public, browser-delivered PhyStack app that runs on a
+visitor's phone. Unlike a screen app there is no device and no secret on the client:
+the app establishes a scoped PhyHub session from a one-time claim code delivered in
+the URL fragment (`#code=…`, usually via a QR code), and receives its resolved
+settings over that authenticated session from the endpoint's Web twin.
 
-Unlike a screen app there is no device and no secret on the client: the app
-establishes a scoped PhyHub session from a one-time claim code delivered in
-the URL fragment (`#code=…`, usually via a QR code), and receives its
-resolved settings over that authenticated session from the endpoint's Web
-twin.
+Based on the screen template (`template-screen-react`); the schema pipeline, build
+output layout, and publish flow are identical — and so is the app code:
+`connectPhyClient()` with no arguments, exactly like a screen app.
 
-## Getting started
+## How it works
 
-```bash
-# Scaffold via the PhyStack CLI
-phy app init my-web-app --type web
-
-# Or work directly from this template
-bun install
-bun run build
-```
-
-Requires `@phystack/hub-client` >= 6.9.0 (the release that ships the
-web-app session branch).
-
-## How a deployed web app boots
-
-1. Publishing a build deploys the bundle under `{urlId}/` on the web
-   endpoints CDN, next to a static `boot.json`
-   (`{ urlId, region, phyhubUrl, coreApiUrl }` — routing info only, no
-   settings, no secrets).
+1. The platform deploys the built bundle under `{urlId}/` on the web endpoints
+   CDN, next to a static `boot.json` (`{ urlId, phyhubUrl, sessionBaseUrl }` —
+   routing info only, no settings, no secrets).
 2. A visitor opens the endpoint URL with a claim code in the fragment
-   (`#code=…`).
-3. The app fetches `boot.json`, exchanges the code for a session
-   (`POST …/api/v1/web-endpoints/{urlId}/session`), and connects to PhyHub.
-   Token refresh, reconnects, and rotation are handled by
-   `@phystack/hub-client`.
-4. Settings resolve like they do for devices: endpoint-level override →
+   (`#code=…`). hub-client detects web-app mode by the presence of
+   `./boot.json`, reads the code, exchanges it for a session
+   (`POST {sessionBaseUrl}/api/v1/web-endpoints/{urlId}/session`), scrubs the
+   code from the URL, and connects to PhyHub. Token refresh, reconnects, and
+   rotation are handled internally — the whole lifecycle logs verbosely to the
+   browser console for now.
+3. Settings resolve like they do for devices: endpoint-level override →
    space-level override → installation settings. They arrive on the Web twin
    with the `webAppAuthenticated` ack.
 
-## Local development
+## Development
 
 ```bash
 bun install
 bun run dev
 ```
 
-There is no deployed `boot.json` in dev, so supply the boot fields via env
-(e.g. in `.env.local`):
+There is no deployed `boot.json` in dev, so create a git-ignored
+`public/boot.json` (vite serves it at `/boot.json`, which is how hub-client
+detects web-app mode):
 
+```json
+{
+  "urlId": "my-endpoint",
+  "phyhubUrl": "http://localhost:14401",
+  "sessionBaseUrl": "http://localhost:14400"
+}
 ```
-VITE_WEB_URL_ID=my-endpoint
-VITE_WEB_REGION=eu
-VITE_PHYHUB_URL=https://…
-VITE_CORE_API_URL=https://…
-```
 
-Then open `http://localhost:3000/#code=<claim-code>` with a freshly minted
-claim code. Codes are one-time: after a page reload, mint a new one.
+Then open `http://localhost:3000/#code=<claim-code>` with a freshly minted claim
+code. Codes are one-time: after a page reload, mint a new one.
 
-Simulator support (`phy-simulator`) is not wired up yet for web sessions.
+Simulator support (`phy-simulator`) is not wired up yet.
 
-## Flow
+## Settings schema
+
+`src/schema.ts` defines the installation settings (compiled to `build/schema.json`
+by `@phystack/ts-schema`). `src/analytics-schema.ts` declares the analytics cards
+shown in the Console reports view.
+
+## Publish
 
 ```bash
-# 1. Edit src/schema.ts (installation settings), src/analytics-schema.ts (events), src/App.tsx (UI)
-# 2. Local build: typecheck + vite build + schemas into build/
-bun run build
-
-# 3. Register the app in your tenant (once)
-phy app create my-web-app --type web
-
-# 4. Submit + publish the build (no container image for web apps)
-bun run pub
+phy app create <name> --type web        # once
+bun run pub                             # build + submit + publish
 ```
 
-`pub` runs `phy app build create $npm_package_name --dir . --publish` — the
-vite bundle and generated schemas are packaged and published as soon as the
-build processes. Publishing redeploys the bundle to every enabled web
-endpoint of each installation on the published build.
+`bun run pub` packages the `build/` output into a `.gridapp` and publishes it via
+`phy app build create $npm_package_name --dir . --publish`. Publishing redeploys
+the bundle to every enabled web endpoint of each installation on the published
+build.
 
-## Scripts
+## Relation to template-web-react
 
-| Script | Description |
-|--------|-------------|
-| `bun run dev` | Schemas + vite dev server (boot fields from env, code from `#code=…`) |
-| `bun run build` | `tsc -b` + `vite build` + schemas + bundle post-processing |
-| `bun run schema` | Generate `build/schema.json`, `meta-schema.json`, `analytics-schema.json` |
-| `bun run pub` | Build, then submit + publish via the `phy` CLI |
-| `bun run lint` | eslint |
-| `bun run format` | prettier (`format:check` to verify only) |
+This directory is the in-monorepo copy of
+[template-web-react](https://github.com/phystack/template-web-react) (the
+`v2` branch `phy app init --type web` clones). Two intentional differences:
 
-## Layout
+- `"@phystack/hub-client"` is `workspace:*` here (builds against the local
+  package) vs the published range in the template repo.
+- The template repo carries its own README/CLAUDE.md written for scaffolded
+  users.
 
-| Path | Purpose |
-|------|---------|
-| `src/App.tsx` | UI + web session connection (claim code → settings) |
-| `src/boot.ts` | `boot.json` fetch with env fallback for local dev |
-| `src/schema.ts` | Installation-settings schema (TypeScript → JSON Schema) |
-| `src/analytics-schema.ts` | Analytics events this app emits |
-| `scripts/` | Schema build, post-build bundle fixup |
-| `vite.config.ts` | Dev server (port 3000), relative-path bundle output |
-
-## Screen sibling
-
-[template-screen-react](https://github.com/phystack/template-screen-react)
-is the SCREEN-app variant of this template: same schema pipeline, build
-output layout, and publish flow; only the connection branch differs (device
-twin via `#instanceId` instead of a web session via `#code`). If you change
-shared parts of one template, change both.
+Everything else is lockstep — if you change shared parts here, push the same
+change to the template repo (and vice versa).

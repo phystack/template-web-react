@@ -2,12 +2,10 @@ import { useEffect, useState } from "react";
 import styled from "styled-components";
 import {
   connectPhyClient,
-  readWebSessionCodeFromLocation,
   type PhyHubClient,
   type WebAppSessionError,
 } from "@phystack/hub-client";
 import logo from "./phystack-logo.svg";
-import { loadBoot } from "./boot";
 import type { Settings } from "./schema";
 
 interface AppState {
@@ -33,25 +31,12 @@ function App() {
 
     const initialize = async () => {
       try {
-        // The one-time claim code arrives in the URL fragment (`#code=…`),
-        // minted by the platform and delivered via QR / link. Without it
-        // there is no session to establish.
-        const code = readWebSessionCodeFromLocation();
-        if (!code) {
-          throw new Error(
-            "No session code in the URL — open this app via its QR code or session link."
-          );
-        }
-
-        const boot = await loadBoot();
-        const client = await connectPhyClient({
-          webApp: {
-            urlId: boot.urlId,
-            sessionBaseUrl: boot.sessionBaseUrl,
-            phyhubUrl: boot.phyhubUrl,
-            code,
-          },
-        });
+        // Zero-config, same as a screen app: hub-client detects a deployed
+        // web app by the platform-published boot.json next to the bundle,
+        // reads the one-time claim code from the URL fragment (`#code=…`),
+        // mints the session, and connects. Local dev: serve a boot.json
+        // (e.g. public/boot.json) and open /#code=<claim-code>.
+        const client = await connectPhyClient();
 
         detachTerminated = client.onWebAppSessionTerminated((sessionError) => {
           if (!cancelled) {
