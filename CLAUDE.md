@@ -11,7 +11,8 @@ twin session minted from a one-time claim code). Scaffolded by
 | Command | What it runs |
 |---|---|
 | `bun install` | Install dependencies |
-| `bun run dev` | Schemas + `vite` (boot from `public/boot.json`, claim code from `#code=…`) |
+| `bun run dev` | `phy simulator run .` — local Web twin + `public/boot.json` + vite (open `#code=dev`) |
+| `bun run start` | Schemas + `vite` alone (against an existing `public/boot.json`) |
 | `bun run build` | `tsc -b` + `vite build` + schemas + `scripts/post-build.js` |
 | `bun run schema` | `scripts/build-schema.js` + `scripts/build-analytics-schema.js` → `build/` |
 | `bun run pub` | `bun run build && phy app build create $npm_package_name --dir . --publish` |
@@ -19,12 +20,15 @@ twin session minted from a one-time claim code). Scaffolded by
 
 ## Dev loop
 
-- No simulator support yet for web sessions. Create a git-ignored
-  `public/boot.json` (`{ urlId, phyhubUrl, sessionBaseUrl }`) pointing at a
-  real environment, then open `http://localhost:3000/#code=<claim-code>`.
-- Claim codes are one-time. A page reload consumes nothing by itself, but a
-  new session needs a freshly minted code — the refresh-grant rotation only
-  survives inside a running page.
+- Fully local via the simulator (same as the screen template): `phy simulator
+  start` once, then `bun run dev` and open `http://localhost:3000/#code=dev`
+  (any `#code=` value works locally). Settings come from
+  `src/settings/index.json`, generated from the `src/schema.ts` defaults on
+  first run. Requires `@phystack/device-simulator` >= 6.12.
+- Against a real environment: create a git-ignored `public/boot.json`
+  (`{ urlId, phyhubUrl, sessionBaseUrl }`), run `bun run start`, and open
+  `http://localhost:3000/#code=<claim-code>` — mint the code from the
+  Console's "Get session link" action or `phy web-endpoint code <endpoint>`.
 - The hub connection is a per-window singleton; `connectPhyClient()`
   is called once from `src/App.tsx` and signals reuse the same socket. Do
   not open a second connection.

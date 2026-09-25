@@ -28,27 +28,47 @@ output layout, and publish flow are identical — and so is the app code:
 
 ## Development
 
+One command, fully local — no platform, no tenant, no device (same flow as the
+screen template):
+
 ```bash
 bun install
+phy simulator start     # once, in a separate terminal
 bun run dev
 ```
 
-There is no deployed `boot.json` in dev, so create a git-ignored
-`public/boot.json` (vite serves it at `/boot.json`, which is how hub-client
-detects web-app mode):
+`bun run dev` runs `phy simulator run .`: it creates a local Web twin with
+settings from `src/settings/index.json` (generated from the `src/schema.ts`
+defaults on first run — delete the file to regenerate), writes a git-ignored
+`public/boot.json` pointing at the simulator, and starts vite. Then open:
+
+```
+http://localhost:3000/#code=dev
+```
+
+Any `#code=` value works against the simulator. Requires
+`@phystack/device-simulator` >= 6.12 (the `phy simulator` / `phy-simulator`
+command).
+
+To run vite alone against an existing `public/boot.json` (e.g. one pointing at
+a real environment), use `bun run start`.
+
+### Against a real environment
+
+Create a git-ignored `public/boot.json` pointing at the environment (vite
+serves it at `/boot.json`, which is how hub-client detects web-app mode):
 
 ```json
 {
-  "urlId": "my-endpoint",
-  "phyhubUrl": "http://localhost:14401",
-  "sessionBaseUrl": "http://localhost:14400"
+  "urlId": "{tenantSlug}/{endpoint-name}",
+  "phyhubUrl": "https://phyhub.{region}.omborigrid.net",
+  "sessionBaseUrl": "https://phyhub.{region}.omborigrid.net"
 }
 ```
 
-Then open `http://localhost:3000/#code=<claim-code>` with a freshly minted claim
-code. Codes are one-time: after a page reload, mint a new one.
-
-Simulator support (`phy-simulator`) is not wired up yet.
+Then open `http://localhost:3000/#code=<claim-code>` with a freshly minted
+claim code — from the Console's "Get session link" action on the web endpoint,
+or `phy web-endpoint code <endpoint>`.
 
 ## Settings schema
 

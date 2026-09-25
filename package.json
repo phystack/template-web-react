@@ -10,8 +10,9 @@
     "node": ">=24.0.0"
   },
   "scripts": {
-    "dev": "bun run schema && vite",
-    "start": "bun run dev",
+    "predev": "node scripts/init-settings.js",
+    "dev": "phy-simulator run .",
+    "start": "bun run schema && vite",
     "schema": "mkdir -p build && bun scripts/build-schema.js && bun run analytics-schema",
     "analytics-schema": "bun scripts/build-analytics-schema.js",
     "build": "tsc -b && vite build && bun run schema && bun scripts/post-build.js",
