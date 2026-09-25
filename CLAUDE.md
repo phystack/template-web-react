@@ -11,7 +11,7 @@ twin session minted from a one-time claim code). Scaffolded by
 | Command | What it runs |
 |---|---|
 | `bun install` | Install dependencies |
-| `bun run dev` | `phy simulator run .` — local Web twin + `public/boot.json` + vite (open `#code=dev`) |
+| `bun run dev` | `phy-simulator run .` — local Web twin + `public/boot.json` + vite (open `#code=dev`) |
 | `bun run start` | Schemas + `vite` alone (against an existing `public/boot.json`) |
 | `bun run build` | `tsc -b` + `vite build` + schemas + `scripts/post-build.js` |
 | `bun run schema` | `scripts/build-schema.js` + `scripts/build-analytics-schema.js` → `build/` |
@@ -20,11 +20,11 @@ twin session minted from a one-time claim code). Scaffolded by
 
 ## Dev loop
 
-- Fully local via the simulator (same as the screen template): `phy simulator
+- Fully local via the simulator (same as the screen template): `phy-simulator
   start` once, then `bun run dev` and open `http://localhost:3000/#code=dev`
   (any `#code=` value works locally). Settings come from
   `src/settings/index.json`, generated from the `src/schema.ts` defaults on
-  first run. Requires `@phystack/device-simulator` >= 6.12.
+  first run. Requires `@phystack/device-simulator`.
 - Against a real environment: create a git-ignored `public/boot.json`
   (`{ urlId, phyhubUrl, sessionBaseUrl }`), run `bun run start`, and open
   `http://localhost:3000/#code=<claim-code>` — mint the code from the
@@ -73,7 +73,7 @@ use the Rust `phy` CLI only.
   `vite.config.ts`) — it is served under a `{urlId}/` prefix on the CDN.
 - `boot.json` is written by the platform at deploy time; never commit one
   into the bundle, and never put settings or secrets in it.
-- Requires `@phystack/hub-client` >= 6.9.0 (web-app session branch).
+- Requires `@phystack/hub-client` >= 6.19.0 (web-app session branch).
 - **Lockstep rule:** shared parts (schema pipeline, scripts/, build layout)
   are copies of `template-screen-react`. If you change something here,
   apply it there too.
