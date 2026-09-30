@@ -33,11 +33,11 @@ screen template):
 
 ```bash
 bun install
-phy simulator start     # once, in a separate terminal
+phy-simulator start     # once, in a separate terminal
 bun run dev
 ```
 
-`bun run dev` runs `phy simulator run .`: it creates a local Web twin with
+`bun run dev` runs `phy-simulator run .`: it creates a local Web twin with
 settings from `src/settings/index.json` (generated from the `src/schema.ts`
 defaults on first run — delete the file to regenerate), writes a git-ignored
 `public/boot.json` pointing at the simulator, and starts vite. Then open:
@@ -47,8 +47,7 @@ http://localhost:3000/#code=dev
 ```
 
 Any `#code=` value works against the simulator. Requires
-`@phystack/device-simulator` >= 6.12 (the `phy simulator` / `phy-simulator`
-command).
+`@phystack/device-simulator` (the `phy-simulator` command).
 
 To run vite alone against an existing `public/boot.json` (e.g. one pointing at
 a real environment), use `bun run start`.
