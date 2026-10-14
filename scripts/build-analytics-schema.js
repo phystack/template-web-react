@@ -1,32 +1,58 @@
-import { exec } from "child_process";
-import { promisify } from "util";
+import { spawn } from "child_process";
 import fs from "fs";
 import path from "path";
-import { fileURLToPath } from "url";
+import { fileURLToPath, pathToFileURL } from "url";
 
-const execAsync = promisify(exec);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(__dirname, "..");
 const buildDir = path.join(rootDir, "build");
 
-// Generate analytics schema by compiling TypeScript and extracting the default export
+// Bun imports the TypeScript schema directly. The previous command compiled
+// with `tsc --outFile /dev/stdout` and eval'd the AMD bundle in a shell
+// string. cmd.exe does not treat single quotes as quotes, and tsc cannot
+// write /dev/stdout on Windows, so the script exited 1 and left an empty
+// analytics-schema.json.
+function loadSchema(schemaPath) {
+  const importer = [
+    `import schema from ${JSON.stringify(pathToFileURL(schemaPath).href)};`,
+    "if (schema === undefined || schema === null) {",
+    '  console.error("analytics-schema.ts has no default export");',
+    "  process.exit(1);",
+    "}",
+    "process.stdout.write(JSON.stringify(schema));",
+  ].join("\n");
+
+  return new Promise((resolve, reject) => {
+    const child = spawn(process.execPath, ["-e", importer], {
+      cwd: rootDir,
+      shell: false,
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+    const stdout = [];
+    const stderr = [];
+    child.stdout.on("data", (chunk) => stdout.push(chunk));
+    child.stderr.on("data", (chunk) => stderr.push(chunk));
+    child.on("error", reject);
+    child.on("close", (code) => {
+      const errorText = Buffer.concat(stderr).toString("utf8").trim();
+      if (code !== 0) {
+        reject(new Error(errorText || `schema import exited ${code}`));
+        return;
+      }
+      resolve(Buffer.concat(stdout).toString("utf8"));
+    });
+  });
+}
+
 async function buildAnalyticsSchema() {
   try {
     console.log("Generating analytics schema...");
-
-    const analyticsSchemaPath = path.join(rootDir, "src/analytics-schema.ts");
+    const analyticsSchemaPath = path.join(rootDir, "src", "analytics-schema.ts");
     const outputPath = path.join(buildDir, "analytics-schema.json");
-
-    // Compile and extract the default export using tsc + Node eval
-    const command = `bunx tsc ${analyticsSchemaPath} --moduleResolution node --skipLibCheck --outFile /dev/stdout -m amd | node -e 'a={};eval("define=(_,d,c)=>{c(a,a,...d.slice(2).map(require));console.log(JSON.stringify(a.default))};" + require("fs").readFileSync("/dev/stdin","utf8"))' > ${outputPath}`;
-
-    const { stdout, stderr } = await execAsync(command, { cwd: rootDir });
-
-    if (stderr && !stderr.includes("(node:")) {
-      // Ignore Node.js warnings
-      console.error(stderr);
-    }
-
+    fs.mkdirSync(buildDir, { recursive: true });
+    const raw = (await loadSchema(analyticsSchemaPath)).trim();
+    JSON.parse(raw);
+    fs.writeFileSync(outputPath, `${raw}\n`);
     console.log("✅ Analytics schema generated successfully");
   } catch (error) {
     console.error("❌ Analytics schema generation failed:", error.message);
